@@ -10,7 +10,7 @@ mySocket.bind((host, port))
 #nombre de rejet acceptés
 mySocket.listen(3)
 numClient = 1
-Format = "Utf8"
+Format = "utf-8"
 threads = []
 
 class Client(threading.Thread):
