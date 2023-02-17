@@ -22,8 +22,11 @@ class Client(threading.Thread):
             print("Pas de message envoyé")
 
     def sendMessage(self, message):
-        other_client = clients[0] if self == clients[1] else clients[1]
-        other_client.conn.send(message.encode('utf-8'))
+        try:
+            other_client = clients[0] if self == clients[1] else clients[1]
+            other_client.conn.send(message.encode('utf-8'))
+        except Exception:
+            print("Pas d'autre clients sur le serveur")
 
     def __del__(self):
         self.conn.close()

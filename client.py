@@ -1,6 +1,6 @@
 import socket
 import threading
-import os
+import sys
 
 host, port = ('localhost', 12345)
 mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -8,7 +8,8 @@ mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def receiveMessage():
     while True:
         message = mySocket.recv(1024).decode('utf-8')
-        print("Autre client : " + message)
+        if message :
+            print("Autre client : " + message)
 
 try:
     mySocket.connect((host, port))
