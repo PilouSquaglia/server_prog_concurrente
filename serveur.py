@@ -1,71 +1,49 @@
 import socket
 import threading
 
-host, port =('', 12345)
-#Création d’une socket (IPv4, TCP)
-mySocket = socket.socket(socket.AF_INET,
-    socket.SOCK_STREAM)
-#Identification IPv4 (IP, Port)
+host, port = ('', 12345)
+mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 mySocket.bind((host, port))
-#nombre de rejet acceptés
-mySocket.listen(3)
-numClient = 1
-Format = "utf-8"
-threads = []
+mySocket.listen(2)
 
 class Client(threading.Thread):
-    def __init__(self, conn, address):
+    def __init__(self, conn, address, client_num):
         threading.Thread.__init__(self)
         self.conn = conn
         self.address = address
+        self.client_num = client_num
 
     def run(self):
-        # file_name = self.conn.recv(2048).decode(Format)
-        message = self.conn.recv(2048).decode(Format)
+        print("Client {} connecté : {}".format(self.client_num, self.address))
+        message = self.conn.recv(2048).decode('utf-8')
         try:
             self.sendMessage(message)
         except NameError:
             print("Pas de message envoyé")
 
     def sendMessage(self, message):
-        for client in clients:
-            if client != self:
-                client.conn.send(message.encode(Format))
+        other_client = clients[0] if self == clients[1] else clients[1]
+        other_client.conn.send(message.encode('utf-8'))
 
     def __del__(self):
         self.conn.close()
 
-def broadcastMessage(message):
-    for client in clients:
-        client.conn.send(message.encode(Format))
-
-# Créer une liste pour stocker tous les clients connectés
+# Créer une liste pour stocker les clients connectés
 clients = []
 
-
-print("Attente de nouveau client")
-while True:
-    # Attente du client et récupération de ses données
+print("Attente de deux clients...")
+for i in range(2):
     conn, address = mySocket.accept()
-    print("Le client numéro {} s'est connecté : {}".format(numClient, address))
-    numClient += 1
+    client = Client(conn, address, i + 1)
+    client.start()
+    clients.append(client)
 
-    # Créer un nouveau thread pour gérer le client
-    threadClient = Client(conn, address)
-    threadClient.start()
-    threads.append(threadClient)
+# Attendre que les threads soient terminés
+for client in clients:
+    client.join()
 
-    # Attendre que tous les threads soient terminés
-    for t in threads:
-        t.join()
-
-    # Fermer le client
-    conn.close()
-
-    # Vérifier si le serveur doit continuer à écouter
-    continuer = input("Voulez-vous continuer ? (o/n) ")
-    if continuer.lower() == 'n':
-        break
-
-# Fermer le serveur
+# Fermer les connexions
+for client in clients:
+    client.conn.close()
 mySocket.close()
+
