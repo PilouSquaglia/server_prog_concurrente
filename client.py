@@ -1,29 +1,44 @@
 import socket
 import threading
-import sys
 
 host, port = ('localhost', 12345)
-mySocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+Format = "utf-8"
 
-def receiveMessage():
-    while True:
-        message = mySocket.recv(1024).decode('utf-8')
-        if message :
-            print("Autre client : " + message)
+class Client:
+    def __init__(self, name):
+        self.name = name
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.socket.connect((host, port))
+        self.receive_thread = threading.Thread(target=self.receiveMessage)
+        self.receive_thread.start()
 
-try:
-    mySocket.connect((host, port))
-    print("Je suis connecté ...")
-except:
-    print("Il y a eu un problème de connexion")
-    sys.exit()
+    def sendMessage(self, message):
+        if not isinstance(self.socket, socket.socket):
+            print("Erreur: le socket n'est pas valide")
+            return
 
-# Lancer un thread pour recevoir les messages de l'autre client
-receive_thread = threading.Thread(target=receiveMessage)
-receive_thread.start()
+        if self.socket.fileno() == -1:
+            print("Erreur: le socket est fermé")
+            return
+        print("##########################{}#########################".format(message))
+        self.socket.send(message.encode(Format))
+
+    def receiveMessage(self):
+        while True:
+            try:
+                message = self.socket.recv(1024).decode(Format)
+                if message:
+                    print(message)
+                # else:
+                #     self.socket.close()
+                #     break
+            except:
+                self.socket.close()
+                break
+
+name = input("Entrez votre nom : ")
+client = Client(name)
 
 while True:
-    message = input("Envoyez un message :\n")
-    mySocket.send(message.encode('utf-8'))
-
-mySocket.close()
+    message = input()
+    client.sendMessage(f"{name}: {message}")
