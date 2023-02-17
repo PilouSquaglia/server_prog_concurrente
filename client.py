@@ -1,6 +1,7 @@
 import socket
 import sys
 import os
+import threading
 
 Format = "utf-8"
 host, port =('localhost', 12345)
@@ -19,6 +20,11 @@ def sendFile(file_name):
         else:
             print("Le fichier n'existe pas. Veuillez réessayer.")
             return False
+
+def receiveMessage():
+    while True:
+        message = mySocket.recv(1024).decode(Format)
+        print("Serveur : " + message)
 try:
     #Demande de connexion au serveur
     mySocket.connect((host, port))
@@ -28,8 +34,17 @@ except:
     sys.exit()
 
 while True:
-    file_name = input("Donnez le nom du fichier : ")
-    if sendFile(file_name):
-        break
+    # file_name = input("Donnez le nom du fichier : ")
+    # if sendFile(file_name):
+    #     break
+    message = input("Envoyez un message :\n")
+    mySocket.send(message.encode(Format))
+
+    # Lancer un thread pour recevoir les messages du serveur
+    receive_thread = threading.Thread(target=receiveMessage)
+    receive_thread.start()
+
+    # Attendre que le thread de réception se termine
+    receive_thread.join()
 
 mySocket.close()

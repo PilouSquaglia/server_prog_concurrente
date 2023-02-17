@@ -20,13 +20,28 @@ class Client(threading.Thread):
         self.address = address
 
     def run(self):
-        file_name = self.conn.recv(2048).decode(Format)
+        # file_name = self.conn.recv(2048).decode(Format)
+        message = self.conn.recv(2048).decode(Format)
         try:
-            fp = open(file_name, 'rb')
-            self.conn.send(fp.read())
-            print("Fichier envoyé !")
-        except FileNotFoundError:
-            print(f"Le fichier {file_name} n'existe pas.")
+            self.sendMessage(message)
+        except NameError:
+            print("Pas de message envoyé")
+
+    def sendMessage(self, message):
+        for client in clients:
+            if client != self:
+                client.conn.send(message.encode(Format))
+
+    def __del__(self):
+        self.conn.close()
+
+def broadcastMessage(message):
+    for client in clients:
+        client.conn.send(message.encode(Format))
+
+# Créer une liste pour stocker tous les clients connectés
+clients = []
+
 
 print("Attente de nouveau client")
 while True:
